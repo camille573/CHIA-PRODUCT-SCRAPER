@@ -1,0 +1,11 @@
+<!doctype html><html><head><base target="_top"><style>body{font:14px Arial;padding:12px;line-height:1.5}pre{white-space:pre-wrap;font:12px Arial}button{padding:8px;margin-bottom:8px}</style></head><body>
+<p>Products displayed by FirstEnroll do not establish authorization to sell. License fields and no-sale highlighting are preserved.</p>
+<button id="run" onclick="resume()">Continue pending scan</button><p id="status">Loading…</p><pre id="result"></pre>
+<script>
+let running=false;
+function render(s){document.getElementById('status').textContent=s.done?'Finished / idle':('Scanning '+(s.agent||''));document.getElementById('result').textContent=JSON.stringify(s.summary,null,2);document.getElementById('run').disabled=s.done;}
+function failure(e){running=false;document.getElementById('status').textContent='Stopped: '+e.message;document.getElementById('run').disabled=false;}
+function step(){google.script.run.withSuccessHandler(s=>{render(s);if(!s.done&&running)setTimeout(step,500);else running=false;}).withFailureHandler(failure).scanNextState();}
+function resume(){if(running)return;running=true;document.getElementById('run').disabled=true;step();}
+google.script.run.withSuccessHandler(s=>{render(s);if(!s.done)resume();}).withFailureHandler(failure).getScanStatus();
+</script></body></html>
