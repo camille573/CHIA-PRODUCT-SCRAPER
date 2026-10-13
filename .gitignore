@@ -1,0 +1,7 @@
+__pycache__/
+*.xlsx
+*.json
+!appsscript.json
+credentials*
+.env
+scan-*.html

@@ -1,0 +1,14 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+let body='<select name="state"><option value="FL" selected>Florida</option><option value="NY">New York</option></select><h4><a href="/information/product.cfm?page=1"><strong>Summit Plan 200+</strong></a></h4><footer>CONTACT US</footer></html>';
+let responseCode=200,request;
+const sandbox={UrlFetchApp:{fetch:(url,options)=>{request=options;return {getResponseCode:()=>responseCode,getContentText:()=>body}}}};
+vm.createContext(sandbox);vm.runInContext(fs.readFileSync(__dirname+'/Code.gs','utf8'),sandbox);
+assert.equal(sandbox.fetchState_('example','FL').products[0],'Summit Plan 200+');
+assert.equal(request.method,'post');assert.equal(request.payload.state,'FL');
+assert.throws(()=>sandbox.fetchState_('example','NY'),/did not confirm/);
+assert.equal(sandbox.fetchState_('example','ZZ').unchecked,true);
+body=body.replace(/<h4>[\s\S]*?<\/h4>/,'');assert.equal(sandbox.fetchState_('example','FL').products.length,0);
+body=body.replace('</html>','');assert.throws(()=>sandbox.fetchState_('example','FL'),/Incomplete/);
+responseCode=403;assert.throws(()=>sandbox.fetchState_('example','FL'),/HTTP 403/);
+vm.runInContext("if(!FE.families.SUMMIT.test('Summit Plan 200+') || FE.families.SUMMIT.test('Summit Lite 100A') || FE.families['SUMMIT LITE'].test('Summit Lite NEW')) throw Error('Family matching failed');",sandbox);
+console.log('Apps Script parser and family safety tests passed; Google runtime authorization still required.');
